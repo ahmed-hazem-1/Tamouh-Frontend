@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const budget = getBudget()
+    const budget = await getBudget()
     return NextResponse.json(budget)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "المبلغ يجب أن يكون أكبر من صفر" }, { status: 400 })
     }
 
-    const updatedBudget = addToBudget(amount)
+    const updatedBudget = await addToBudget(amount)
     return NextResponse.json(updatedBudget)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })

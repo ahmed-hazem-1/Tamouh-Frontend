@@ -61,7 +61,7 @@ export function BudgetManagement() {
         const updatedBudget = await response.json()
         setBudget(updatedBudget)
         setAmount("")
-        setSuccess(`تم إضافة ${amount} ريال إلى الميزانية بنجاح`)
+        setSuccess(`تم إضافة ${amount} ج.م. إلى الميزانية بنجاح`)
       } else {
         const data = await response.json()
         setError(data.error || "فشل في إضافة المبلغ")
@@ -119,7 +119,7 @@ export function BudgetManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {budget ? formatCurrency(budget.totalAmount) : "0 ريال"}
+              {budget ? formatCurrency(budget.totalAmount) : "0 ج.م."}
             </div>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export function BudgetManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {budget ? formatCurrency(budget.usedAmount) : "0 ريال"}
+              {budget ? formatCurrency(budget.usedAmount) : "0 ج.م."}
             </div>
           </CardContent>
         </Card>
@@ -143,7 +143,7 @@ export function BudgetManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">
-              {budget ? formatCurrency(budget.remainingAmount) : "0 ريال"}
+              {budget ? formatCurrency(budget.remainingAmount) : "0 ج.م."}
             </div>
             {budget && (
               <div className="mt-2">
@@ -194,7 +194,7 @@ export function BudgetManagement() {
         <CardContent>
           <form onSubmit={handleAddBudget} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">المبلغ (ريال سعودي)</Label>
+              <Label htmlFor="amount">المبلغ (جنيه مصري)</Label>
               <Input
                 id="amount"
                 type="number"

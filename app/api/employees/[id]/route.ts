@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const employee = getEmployee(params.id)
+    const employee = await getEmployee(params.id)
     if (!employee) {
       return NextResponse.json({ error: "الموظف غير موجود" }, { status: 404 })
     }
@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const updates = await request.json()
-    const updatedEmployee = updateEmployee(params.id, updates)
+    const updatedEmployee = await updateEmployee(params.id, updates)
 
     if (!updatedEmployee) {
       return NextResponse.json({ error: "الموظف غير موجود" }, { status: 404 })
@@ -47,7 +47,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const success = deleteEmployee(params.id)
+    const success = await deleteEmployee(params.id)
     if (!success) {
       return NextResponse.json({ error: "الموظف غير موجود" }, { status: 404 })
     }

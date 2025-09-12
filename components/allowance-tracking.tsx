@@ -284,7 +284,7 @@ export function AllowanceTracking() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="goingAmount">مبلغ الذهاب (ريال)</Label>
+                  <Label htmlFor="goingAmount">مبلغ الذهاب (ج.م.)</Label>
                   <Input
                     id="goingAmount"
                     type="number"
@@ -298,7 +298,7 @@ export function AllowanceTracking() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="returnAmount">مبلغ العودة (ريال)</Label>
+                  <Label htmlFor="returnAmount">مبلغ العودة (ج.م.)</Label>
                   <Input
                     id="returnAmount"
                     type="number"
@@ -396,7 +396,7 @@ export function AllowanceTracking() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {allowances.length > 0 ? formatCurrency(getTotalAmount() / allowances.length) : "0 ريال"}
+              {allowances.length > 0 ? formatCurrency(getTotalAmount() / allowances.length) : "0 ج.م."}
             </div>
           </CardContent>
         </Card>

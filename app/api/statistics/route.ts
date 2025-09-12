@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const statistics = getStatistics()
+    const statistics = await getStatistics()
     return NextResponse.json(statistics)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })

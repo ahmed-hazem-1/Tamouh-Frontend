@@ -1,4 +1,6 @@
-// Simple JSON-based data storage for the application
+// Supabase-based data storage for the application
+import { supabase } from './supabase'
+
 export interface Budget {
   id: string
   totalAmount: number
@@ -40,147 +42,368 @@ export interface Transaction {
   employeeId?: string
 }
 
-// In-memory storage (in production, this would be a database)
-const budget: Budget = {
-  id: "1",
-  totalAmount: 0,
-  usedAmount: 0,
-  remainingAmount: 0,
-  lastUpdated: new Date().toISOString(),
-}
-
 const employees: Employee[] = []
 let allowanceRecords: AllowanceRecord[] = []
 const transactions: Transaction[] = []
 
 // Budget operations
-export function getBudget(): Budget {
-  return budget
+// Database operations using Supabase
+export async function getBudget(): Promise<Budget | null> {
+  const { data, error } = await supabase
+    .from('budget')
+    .select('*')
+    .single()
+
+  if (error) {
+    console.error('Error fetching budget:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    totalAmount: data.total_amount,
+    usedAmount: data.used_amount,
+    remainingAmount: data.remaining_amount,
+    lastUpdated: data.last_updated,
+  }
 }
 
-export function addToBudget(amount: number): Budget {
-  budget.totalAmount += amount
-  budget.remainingAmount += amount
-  budget.lastUpdated = new Date().toISOString()
+export async function addToBudget(amount: number): Promise<Budget | null> {
+  // First get current budget
+  const currentBudget = await getBudget()
+  if (!currentBudget) return null
+
+  const newTotalAmount = currentBudget.totalAmount + amount
+
+  const { data, error } = await supabase
+    .from('budget')
+    .update({
+      total_amount: newTotalAmount,
+      last_updated: new Date().toISOString(),
+    })
+    .eq('id', currentBudget.id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating budget:', error)
+    return null
+  }
 
   // Add transaction record
-  transactions.push({
-    id: Date.now().toString(),
-    type: "budget_add",
-    amount,
-    description: `إضافة مبلغ ${amount} إلى الميزانية`,
-    createdAt: new Date().toISOString(),
-  })
+  await supabase
+    .from('transactions')
+    .insert({
+      type: 'budget_add',
+      amount,
+      description: `إضافة مبلغ ${amount} إلى الميزانية`,
+    })
 
-  return budget
+  return {
+    id: data.id,
+    totalAmount: data.total_amount,
+    usedAmount: data.used_amount,
+    remainingAmount: data.remaining_amount,
+    lastUpdated: data.last_updated,
+  }
 }
 
-export function deductFromBudget(amount: number, employeeId: string, description: string): boolean {
-  if (budget.remainingAmount < amount) {
+export async function deductFromBudget(amount: number, employeeId: string, description: string): Promise<boolean> {
+  const currentBudget = await getBudget()
+  if (!currentBudget || currentBudget.remainingAmount < amount) {
     return false // Insufficient budget
   }
 
-  budget.usedAmount += amount
-  budget.remainingAmount -= amount
-  budget.lastUpdated = new Date().toISOString()
+  const newUsedAmount = currentBudget.usedAmount + amount
+
+  const { error } = await supabase
+    .from('budget')
+    .update({
+      used_amount: newUsedAmount,
+      last_updated: new Date().toISOString(),
+    })
+    .eq('id', currentBudget.id)
+
+  if (error) {
+    console.error('Error deducting from budget:', error)
+    return false
+  }
 
   // Add transaction record
-  transactions.push({
-    id: Date.now().toString(),
-    type: "allowance_deduct",
-    amount,
-    description,
-    createdAt: new Date().toISOString(),
-    employeeId,
-  })
+  await supabase
+    .from('transactions')
+    .insert({
+      type: 'allowance_deduct',
+      amount,
+      description,
+      employee_id: employeeId,
+    })
 
   return true
 }
 
 // Employee operations
-export function getEmployees(): Employee[] {
-  return employees
-}
+export async function getEmployees(): Promise<Employee[]> {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*')
+    .order('created_at', { ascending: false })
 
-export function getEmployee(id: string): Employee | undefined {
-  return employees.find((emp) => emp.id === id)
-}
-
-export function addEmployee(employee: Omit<Employee, "id" | "createdAt">): Employee {
-  const newEmployee: Employee = {
-    ...employee,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
+  if (error) {
+    console.error('Error fetching employees:', error)
+    return []
   }
-  employees.push(newEmployee)
-  return newEmployee
+
+  return data.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    employeeId: emp.employee_id,
+    phone: emp.phone || '',
+    walletType: emp.wallet_type || '',
+    totalAllowance: emp.total_allowance,
+    createdAt: emp.created_at,
+  }))
 }
 
-export function updateEmployee(id: string, updates: Partial<Employee>): Employee | null {
-  const index = employees.findIndex((emp) => emp.id === id)
-  if (index === -1) return null
+export async function getEmployee(id: string): Promise<Employee | null> {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*')
+    .eq('id', id)
+    .single()
 
-  employees[index] = { ...employees[index], ...updates }
-  return employees[index]
+  if (error) {
+    console.error('Error fetching employee:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    employeeId: data.employee_id,
+    phone: data.phone || '',
+    walletType: data.wallet_type || '',
+    totalAllowance: data.total_allowance,
+    createdAt: data.created_at,
+  }
 }
 
-export function deleteEmployee(id: string): boolean {
-  const index = employees.findIndex((emp) => emp.id === id)
-  if (index === -1) return false
+export async function addEmployee(employee: Omit<Employee, "id" | "createdAt">): Promise<Employee | null> {
+  const { data, error } = await supabase
+    .from('employees')
+    .insert({
+      name: employee.name,
+      employee_id: employee.employeeId,
+      phone: employee.phone,
+      wallet_type: employee.walletType,
+      total_allowance: employee.totalAllowance,
+    })
+    .select()
+    .single()
 
-  employees.splice(index, 1)
-  // Also remove related allowance records
-  allowanceRecords = allowanceRecords.filter((record) => record.employeeId !== id)
+  if (error) {
+    console.error('Error adding employee:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    employeeId: data.employee_id,
+    phone: data.phone || '',
+    walletType: data.wallet_type || '',
+    totalAllowance: data.total_allowance,
+    createdAt: data.created_at,
+  }
+}
+
+export async function updateEmployee(id: string, updates: Partial<Employee>): Promise<Employee | null> {
+  const updateData: any = {}
+  if (updates.name) updateData.name = updates.name
+  if (updates.employeeId) updateData.employee_id = updates.employeeId
+  if (updates.phone !== undefined) updateData.phone = updates.phone
+  if (updates.walletType !== undefined) updateData.wallet_type = updates.walletType
+  if (updates.totalAllowance !== undefined) updateData.total_allowance = updates.totalAllowance
+
+  const { data, error } = await supabase
+    .from('employees')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating employee:', error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    employeeId: data.employee_id,
+    phone: data.phone || '',
+    walletType: data.wallet_type || '',
+    totalAllowance: data.total_allowance,
+    createdAt: data.created_at,
+  }
+}
+
+export async function deleteEmployee(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('employees')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting employee:', error)
+    return false
+  }
+
   return true
 }
 
 // Allowance operations
-export function getAllowanceRecords(): AllowanceRecord[] {
-  return allowanceRecords
+export async function getAllowanceRecords(): Promise<AllowanceRecord[]> {
+  const { data, error } = await supabase
+    .from('allowance_records')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching allowance records:', error)
+    return []
+  }
+
+  return data.map(record => ({
+    id: record.id,
+    employeeId: record.employee_id,
+    day: record.day,
+    arrivalTime: record.arrival_time || '',
+    departureTime: record.departure_time || '',
+    location: record.location || '',
+    goingAmount: record.going_amount,
+    returnAmount: record.return_amount,
+    totalAmount: record.total_amount,
+    notes: record.notes || '',
+    createdAt: record.created_at,
+  }))
 }
 
-export function getEmployeeAllowanceRecords(employeeId: string): AllowanceRecord[] {
-  return allowanceRecords.filter((record) => record.employeeId === employeeId)
+export async function getEmployeeAllowanceRecords(employeeId: string): Promise<AllowanceRecord[]> {
+  const { data, error } = await supabase
+    .from('allowance_records')
+    .select('*')
+    .eq('employee_id', employeeId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching employee allowance records:', error)
+    return []
+  }
+
+  return data.map(record => ({
+    id: record.id,
+    employeeId: record.employee_id,
+    day: record.day,
+    arrivalTime: record.arrival_time || '',
+    departureTime: record.departure_time || '',
+    location: record.location || '',
+    goingAmount: record.going_amount,
+    returnAmount: record.return_amount,
+    totalAmount: record.total_amount,
+    notes: record.notes || '',
+    createdAt: record.created_at,
+  }))
 }
 
-export function addAllowanceRecord(record: Omit<AllowanceRecord, "id" | "createdAt">): AllowanceRecord | null {
-  // Check if budget is sufficient
-  if (!deductFromBudget(record.totalAmount, record.employeeId, `بدل انتقال للموظف ${record.employeeId}`)) {
+export async function addAllowanceRecord(record: Omit<AllowanceRecord, "id" | "createdAt">): Promise<AllowanceRecord | null> {
+  // Check if budget is sufficient and deduct
+  const deductSuccess = await deductFromBudget(record.totalAmount, record.employeeId, `بدل انتقال للموظف ${record.employeeId}`)
+  if (!deductSuccess) {
     return null // Insufficient budget
   }
 
-  const newRecord: AllowanceRecord = {
-    ...record,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-  }
+  const { data, error } = await supabase
+    .from('allowance_records')
+    .insert({
+      employee_id: record.employeeId,
+      day: record.day,
+      arrival_time: record.arrivalTime,
+      departure_time: record.departureTime,
+      location: record.location,
+      going_amount: record.goingAmount,
+      return_amount: record.returnAmount,
+      notes: record.notes,
+    })
+    .select()
+    .single()
 
-  allowanceRecords.push(newRecord)
+  if (error) {
+    console.error('Error adding allowance record:', error)
+    return null
+  }
 
   // Update employee total allowance
-  const employee = employees.find((emp) => emp.id === record.employeeId)
-  if (employee) {
-    employee.totalAllowance += record.totalAmount
-  }
+  const { error: updateError } = await supabase
+    .from('employees')
+    .update({
+      total_allowance: supabase.rpc('increment_total_allowance', {
+        emp_id: record.employeeId,
+        amount: record.totalAmount
+      })
+    })
+    .eq('id', record.employeeId)
 
-  return newRecord
+  return {
+    id: data.id,
+    employeeId: data.employee_id,
+    day: data.day,
+    arrivalTime: data.arrival_time || '',
+    departureTime: data.departure_time || '',
+    location: data.location || '',
+    goingAmount: data.going_amount,
+    returnAmount: data.return_amount,
+    totalAmount: data.total_amount,
+    notes: data.notes || '',
+    createdAt: data.created_at,
+  }
 }
 
 // Transaction operations
-export function getTransactions(): Transaction[] {
-  return transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+export async function getTransactions(): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching transactions:', error)
+    return []
+  }
+
+  return data.map(transaction => ({
+    id: transaction.id,
+    type: transaction.type,
+    amount: transaction.amount,
+    description: transaction.description || '',
+    createdAt: transaction.created_at,
+    employeeId: transaction.employee_id || undefined,
+  }))
 }
 
 // Statistics
-export function getStatistics() {
-  const totalEmployees = employees.length
-  const totalAllowanceRecords = allowanceRecords.length
-  const totalTransactions = transactions.length
+export async function getStatistics() {
+  const [employees, allowanceRecords, transactions, budget] = await Promise.all([
+    getEmployees(),
+    getAllowanceRecords(),
+    getTransactions(),
+    getBudget(),
+  ])
 
   return {
-    totalEmployees,
-    totalAllowanceRecords,
-    totalTransactions,
+    totalEmployees: employees.length,
+    totalAllowanceRecords: allowanceRecords.length,
+    totalTransactions: transactions.length,
     budget,
   }
 }

@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const employees = getEmployees()
+    const employees = await getEmployees()
     return NextResponse.json(employees)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 })
     }
 
-    const newEmployee = addEmployee({
+    const newEmployee = await addEmployee({
       name,
       employeeId,
       phone,

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: { employee
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const allowances = getEmployeeAllowanceRecords(params.employeeId)
+    const allowances = await getEmployeeAllowanceRecords(params.employeeId)
     return NextResponse.json(allowances)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })

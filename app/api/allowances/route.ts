@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 })
     }
 
-    const allowances = getAllowanceRecords()
+    const allowances = await getAllowanceRecords()
     return NextResponse.json(allowances)
   } catch (error) {
     return NextResponse.json({ error: "حدث خطأ في الخادم" }, { status: 500 })
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const totalAmount = Number.parseFloat(goingAmount) + Number.parseFloat(returnAmount)
 
-    const newAllowance = addAllowanceRecord({
+    const newAllowance = await addAllowanceRecord({
       employeeId,
       day,
       arrivalTime,

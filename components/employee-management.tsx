@@ -291,7 +291,7 @@ export function EmployeeManagement() {
             <div className="text-2xl font-bold text-blue-600">
               {employees.length > 0
                 ? formatCurrency(employees.reduce((sum, emp) => sum + emp.totalAllowance, 0) / employees.length)
-                : "0 ريال"}
+                : "0 ج.م."}
             </div>
           </CardContent>
         </Card>

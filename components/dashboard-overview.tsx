@@ -163,7 +163,7 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">
-              {statistics ? formatCurrency(statistics.budget.remainingAmount) : "0 ريال"}
+              {statistics ? formatCurrency(statistics.budget.remainingAmount) : "0 ج.م."}
             </div>
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="secondary" className={`bg-${budgetStatus.color}-100 text-${budgetStatus.color}-800`}>
