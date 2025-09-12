@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة بيانات نظام إدارة طموح</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Tahoma', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Tahoma', 'Arial', sans-serif;
+        }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .payment-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .payment-instapay { background-color: #e1f5fe; color: #0277bd; }
+        .payment-vodafone { background-color: #fce4ec; color: #c2185b; }
+        .payment-orange { background-color: #fff3e0; color: #f57c00; }
+        .payment-etisalat { background-color: #e8f5e8; color: #388e3c; }
+        .payment-fawry { background-color: #f3e5f5; color: #7b1fa2; }
+        .payment-bank { background-color: #e3f2fd; color: #1976d2; }
+        .payment-cash { background-color: #e8f5e8; color: #4caf50; }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .stat-trend {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        .trend-neutral { color: #6b7280; }
+        
+        .progress-bar {
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .department-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .grid-auto-fit {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">📊 لوحة بيانات نظام إدارة طموح</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connection-status" class="flex items-center">
+                        <div class="loading"></div>
+                        <span class="mr-2 text-sm text-gray-600">جاري الاتصال...</span>
+                    </div>
+                    <button onclick="refreshData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        🔄 تحديث البيانات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">💰</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">إجمالي الميزانية</dt>
+                            <dd id="total-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <span id="budget-trend" class="stat-trend">📈 +0% من الشهر الماضي</span>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Used Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">📉</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">المبلغ المستخدم</dt>
+                            <dd id="used-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                            <div class="mt-2">
+                                <div class="progress-bar">
+                                    <div id="usage-progress" class="progress-fill bg-red-500" style="width: 0%"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <span id="usage-percentage">0%</span> من الميزانية المستخدمة
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remaining Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">💳</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">المبلغ المتبقي</dt>
+                            <dd id="remaining-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <span id="days-remaining">--- يوم</span> متبقي في الشهر
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Employees Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">👥</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">إجمالي الموظفين</dt>
+                            <dd id="total-employees" class="text-lg font-medium text-gray-900">0</dd>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <span id="active-employees">0</span> موظف نشط هذا الشهر
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Statistics Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <!-- Total Allowances -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">🎯</div>
+                    <div class="text-2xl font-bold text-green-600" id="total-allowances">0</div>
+                    <div class="text-sm text-gray-500">إجمالي البدلات</div>
+                </div>
+            </div>
+
+            <!-- Average Allowance -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">📊</div>
+                    <div class="text-2xl font-bold text-blue-600" id="avg-allowance">0 ج.م.</div>
+                    <div class="text-sm text-gray-500">متوسط البدل</div>
+                </div>
+            </div>
+
+            <!-- This Month -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">📅</div>
+                    <div class="text-2xl font-bold text-purple-600" id="month-allowances">0</div>
+                    <div class="text-sm text-gray-500">بدلات هذا الشهر</div>
+                </div>
+            </div>
+
+            <!-- Today -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">⏰</div>
+                    <div class="text-2xl font-bold text-orange-600" id="today-allowances">0</div>
+                    <div class="text-sm text-gray-500">بدلات اليوم</div>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">💳</div>
+                    <div class="text-2xl font-bold text-indigo-600" id="payment-methods">0</div>
+                    <div class="text-sm text-gray-500">طرق الدفع</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Charts Section -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Budget vs Usage Chart -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">📈 تحليل الميزانية</h3>
+                    <div class="chart-container">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Allowances Over Time -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">📊 البدلات خلال الأسبوع</h3>
+                    <div class="chart-container">
+                        <canvas id="allowancesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods Distribution -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">💳 توزيع طرق الدفع</h3>
+                <div class="chart-container">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+                <div id="payment-methods-list" class="mt-4 space-y-2">
+                    <!-- Payment methods will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Top Employees Table -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">🏆 أعلى الموظفين في البدلات</h3>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المرتبة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي البدلات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد الرحلات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-employees-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        <div class="loading mx-auto"></div>
+                                        <div class="mt-2">جاري تحميل البيانات...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Recent Allowances Table -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">� آخر البدلات المفصلة</h3>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموظف</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموقع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allowances-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        <div class="loading mx-auto"></div>
+                                        <div class="mt-2">جاري تحميل البيانات...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Employees Table -->
+        <div class="mt-8 bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">� جميع الموظفين</h3>
+            </div>
+            <div class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم الموظف</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم الهاتف</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">طريقة الدفع</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي البدلات</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التسجيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-table" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="loading mx-auto"></div>
+                                    <div class="mt-2">جاري تحميل البيانات...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="mt-8 bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">💰 آخر المعاملات</h3>
+            </div>
+            <div class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع المعاملة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="loading mx-auto"></div>
+                                    <div class="mt-2">جاري تحميل البيانات...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="text-center text-sm text-gray-500">
+                <p>© 2025 نظام إدارة تموح - لوحة البيانات | آخر تحديث: <span id="last-update">---</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://dqexwiokpeyjdrxfgzfs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxZXh3aW9rcGV5amRyeGZnemZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTgwNjYsImV4cCI6MjA3MzIzNDA2Nn0.ZyfXRWS4waoIx6IMLouw8c7iH1CtqI3PRqJQQ09tDKQ';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global data store
+        let dashboardData = {
+            budget: null,
+            employees: [],
+            allowances: [],
+            transactions: [],
+            charts: {}
+        };
+
+        // Currency formatter
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP',
+                minimumFractionDigits: 0,
+            }).format(amount);
+        }
+
+        // Date formatter
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+
+        // Date with weekday formatter
+        function formatDateWithWeekday(dateString) {
+            return new Date(dateString).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short'
+            });
+        }
+
+        // Calculate days remaining in month
+        function getDaysRemainingInMonth() {
+            const now = new Date();
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            return Math.ceil((lastDay - now) / (1000 * 60 * 60 * 24));
+        }
+
+        // Get payment method display name
+        function getPaymentMethodName(method) {
+            const methods = {
+                'instapay': 'InstaPay',
+                'vodafone_cash': 'Vodafone Cash',
+                'orange_cash': 'Orange Cash',
+                'etisalat_cash': 'Etisalat Cash',
+                'fawry': 'Fawry',
+                'bank_transfer': 'تحويل بنكي',
+                'cash': 'نقداً'
+            };
+            return methods[method] || method;
+        }
+
+        // Get payment method CSS class
+        function getPaymentMethodClass(method) {
+            const classes = {
+                'instapay': 'payment-instapay',
+                'vodafone_cash': 'payment-vodafone',
+                'orange_cash': 'payment-orange',
+                'etisalat_cash': 'payment-etisalat',
+                'fawry': 'payment-fawry',
+                'bank_transfer': 'payment-bank',
+                'cash': 'payment-cash'
+            };
+            return classes[method] || 'payment-badge';
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected, message = '') {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.innerHTML = `
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="mr-2 text-sm text-green-600">متصل</span>
+                `;
+            } else {
+                statusElement.innerHTML = `
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="mr-2 text-sm text-red-600">غير متصل ${message}</span>
+                `;
+            }
+        }
+
+        // Load budget data
+        async function loadBudget() {
+            try {
+                const { data, error } = await supabase
+                    .from('budget')
+                    .select('*')
+                    .single();
+
+                if (error) throw error;
+
+                dashboardData.budget = data;
+                
+                document.getElementById('total-budget').textContent = formatCurrency(data.total_amount);
+                document.getElementById('used-budget').textContent = formatCurrency(data.used_amount);
+                document.getElementById('remaining-budget').textContent = formatCurrency(data.remaining_amount);
+                
+                // Update progress bar
+                const usagePercentage = data.total_amount > 0 ? (data.used_amount / data.total_amount) * 100 : 0;
+                document.getElementById('usage-progress').style.width = `${Math.min(usagePercentage, 100)}%`;
+                document.getElementById('usage-percentage').textContent = `${Math.round(usagePercentage)}%`;
+                
+                // Days remaining
+                document.getElementById('days-remaining').textContent = `${getDaysRemainingInMonth()} يوم`;
+                
+                // Update budget chart
+                updateBudgetChart();
+                
+            } catch (error) {
+                console.error('Error loading budget:', error);
+                document.getElementById('total-budget').textContent = 'خطأ في التحميل';
+                document.getElementById('used-budget').textContent = 'خطأ في التحميل';
+                document.getElementById('remaining-budget').textContent = 'خطأ في التحميل';
+            }
+        }
+
+        // Load employees data
+        async function loadEmployees() {
+            try {
+                const { data, error } = await supabase
+                    .from('employees')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                dashboardData.employees = data;
+                
+                document.getElementById('total-employees').textContent = data.length;
+                
+                // Count active employees (those with allowances this month)
+                const thisMonth = new Date().toISOString().substring(0, 7);
+                const activeEmployeesSet = new Set();
+                dashboardData.allowances.forEach(allowance => {
+                    if (allowance.day && allowance.day.startsWith(thisMonth)) {
+                        activeEmployeesSet.add(allowance.employee_id);
+                    }
+                });
+                document.getElementById('active-employees').textContent = activeEmployeesSet.size;
+
+                // Load all employees table
+                const tableBody = document.getElementById('employees-table');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">لا توجد بيانات موظفين</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = data.map(employee => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${employee.employee_id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${employee.phone || 'غير محدد'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="payment-badge ${getPaymentMethodClass(employee.wallet_type)}">
+                                    ${getPaymentMethodName(employee.wallet_type)}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(employee.total_allowance)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(employee.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Load top employees
+                loadTopEmployees();
+                updatePaymentMethodsChart();
+
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                document.getElementById('employees-table').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات الموظفين</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load allowances data
+        async function loadAllowances() {
+            try {
+                const { data, error } = await supabase
+                    .from('allowance_records')
+                    .select(`
+                        *,
+                        employees (
+                            name,
+                            employee_id
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                dashboardData.allowances = data;
+
+                // Update statistics
+                const totalAllowances = data.length;
+                const totalAmount = data.reduce((sum, item) => sum + item.total_amount, 0);
+                const avgAmount = totalAllowances > 0 ? totalAmount / totalAllowances : 0;
+
+                // This month allowances
+                const thisMonth = new Date().toISOString().substring(0, 7);
+                const monthAllowances = data.filter(item => item.day && item.day.startsWith(thisMonth));
+
+                // Today allowances
+                const today = new Date().toISOString().substring(0, 10);
+                const todayAllowances = data.filter(item => item.day === today);
+
+                document.getElementById('total-allowances').textContent = totalAllowances;
+                document.getElementById('avg-allowance').textContent = formatCurrency(avgAmount);
+                document.getElementById('month-allowances').textContent = monthAllowances.length;
+                document.getElementById('today-allowances').textContent = todayAllowances.length;
+
+                // Load recent allowances table
+                const tableBody = document.getElementById('allowances-table');
+                const recentAllowances = data.slice(0, 10);
+                
+                if (recentAllowances.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد بدلات مسجلة</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = recentAllowances.map(allowance => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                ${allowance.employees ? allowance.employees.name : 'غير معروف'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateWithWeekday(allowance.day)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${allowance.location || 'غير محدد'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${formatCurrency(allowance.total_amount)}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Automatically recalculate employee totals when loading allowances
+                await autoRecalculateEmployeeTotals();
+
+                // Update charts
+                updateAllowancesChart();
+
+            } catch (error) {
+                console.error('Error loading allowances:', error);
+                document.getElementById('allowances-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات البدلات</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Automatically recalculate employee totals based on actual allowance records
+        async function autoRecalculateEmployeeTotals() {
+            try {
+                // Get all allowance records grouped by employee
+                const { data: allowanceData, error: allowanceError } = await supabase
+                    .from('allowance_records')
+                    .select('employee_id, total_amount')
+                
+                if (allowanceError) {
+                    console.error('Error fetching allowances for auto-recalculation:', allowanceError)
+                    return false
+                }
+
+                // Calculate totals per employee
+                const employeeTotals = allowanceData.reduce((acc, record) => {
+                    const empId = record.employee_id
+                    acc[empId] = (acc[empId] || 0) + record.total_amount
+                    return acc
+                }, {})
+
+                // Get all employees
+                const { data: allEmployees, error: empError } = await supabase
+                    .from('employees')
+                    .select('id, total_allowance')
+                
+                if (empError) {
+                    console.error('Error fetching employees for auto-recalculation:', empError)
+                    return false
+                }
+
+                // Check if any employee needs updating
+                let needsUpdate = false
+                const updatePromises = []
+
+                for (const employee of allEmployees) {
+                    const actualTotal = employeeTotals[employee.id] || 0
+                    const currentTotal = employee.total_allowance
+                    
+                    // Only update if there's a difference
+                    if (Math.abs(actualTotal - currentTotal) > 0.01) {
+                        needsUpdate = true
+                        updatePromises.push(
+                            supabase
+                                .from('employees')
+                                .update({ total_allowance: actualTotal })
+                                .eq('id', employee.id)
+                        )
+                    }
+                }
+
+                if (needsUpdate) {
+                    await Promise.all(updatePromises)
+                    console.log('✅ Auto-recalculated employee totals')
+                    
+                    // Reload employees data to reflect changes
+                    setTimeout(loadEmployees, 500)
+                }
+
+                return true
+                
+            } catch (error) {
+                console.error('Error in auto-recalculation:', error)
+                return false
+            }
+        }
+
+        // Load top employees
+        function loadTopEmployees() {
+            const employeeStats = {};
+            
+            // Calculate stats for each employee
+            dashboardData.allowances.forEach(allowance => {
+                const empId = allowance.employee_id;
+                if (!employeeStats[empId]) {
+                    const employee = dashboardData.employees.find(emp => emp.id === empId);
+                    employeeStats[empId] = {
+                        name: employee ? employee.name : 'غير معروف',
+                        totalAmount: 0,
+                        tripCount: 0
+                    };
+                }
+                employeeStats[empId].totalAmount += allowance.total_amount;
+                employeeStats[empId].tripCount += 1;
+            });
+
+            // Sort by total amount
+            const sortedEmployees = Object.values(employeeStats)
+                .sort((a, b) => b.totalAmount - a.totalAmount)
+                .slice(0, 10);
+
+            const tableBody = document.getElementById('top-employees-table');
+            if (sortedEmployees.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد بيانات</td>
+                    </tr>
+                `;
+            } else {
+                tableBody.innerHTML = sortedEmployees.map((employee, index) => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${index < 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'} text-xs font-bold">
+                                ${index + 1}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${formatCurrency(employee.totalAmount)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${employee.tripCount} رحلة</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Update budget chart
+        function updateBudgetChart() {
+            const ctx = document.getElementById('budgetChart');
+            if (!ctx || !dashboardData.budget) return;
+
+            if (dashboardData.charts.budget) {
+                dashboardData.charts.budget.destroy();
+            }
+
+            dashboardData.charts.budget = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['المبلغ المستخدم', 'المبلغ المتبقي'],
+                    datasets: [{
+                        data: [dashboardData.budget.used_amount, dashboardData.budget.remaining_amount],
+                        backgroundColor: ['#ef4444', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    family: 'Tahoma'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update allowances chart
+        function updateAllowancesChart() {
+            const ctx = document.getElementById('allowancesChart');
+            if (!ctx || !dashboardData.allowances) return;
+
+            if (dashboardData.charts.allowances) {
+                dashboardData.charts.allowances.destroy();
+            }
+
+            // Get last 7 days data
+            const last7Days = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                last7Days.push(date.toISOString().substring(0, 10));
+            }
+
+            const dailyData = last7Days.map(date => {
+                const dayAllowances = dashboardData.allowances.filter(allowance => allowance.day === date);
+                return {
+                    date: new Date(date).toLocaleDateString('ar-EG', { weekday: 'short' }),
+                    amount: dayAllowances.reduce((sum, allowance) => sum + allowance.total_amount, 0),
+                    count: dayAllowances.length
+                };
+            });
+
+            dashboardData.charts.allowances = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyData.map(d => d.date),
+                    datasets: [{
+                        label: 'إجمالي البدلات (ج.م.)',
+                        data: dailyData.map(d => d.amount),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'عدد الرحلات',
+                        data: dailyData.map(d => d.count),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: false,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Tahoma'
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'المبلغ (ج.م.)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'عدد الرحلات'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update payment methods chart
+        function updatePaymentMethodsChart() {
+            const ctx = document.getElementById('paymentChart');
+            if (!ctx || !dashboardData.employees) return;
+
+            if (dashboardData.charts.payment) {
+                dashboardData.charts.payment.destroy();
+            }
+
+            // Count payment methods
+            const paymentCounts = {};
+            dashboardData.employees.forEach(employee => {
+                const method = employee.wallet_type;
+                paymentCounts[method] = (paymentCounts[method] || 0) + 1;
+            });
+
+            const methods = Object.keys(paymentCounts);
+            const counts = Object.values(paymentCounts);
+            const colors = methods.map(method => {
+                const colorMap = {
+                    'instapay': '#0277bd',
+                    'vodafone_cash': '#c2185b',
+                    'orange_cash': '#f57c00',
+                    'etisalat_cash': '#388e3c',
+                    'fawry': '#7b1fa2',
+                    'bank_transfer': '#1976d2',
+                    'cash': '#4caf50'
+                };
+                return colorMap[method] || '#6b7280';
+            });
+
+            document.getElementById('payment-methods').textContent = methods.length;
+
+            dashboardData.charts.payment = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: methods.map(method => getPaymentMethodName(method)),
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Update payment methods list
+            const listContainer = document.getElementById('payment-methods-list');
+            listContainer.innerHTML = methods.map((method, index) => `
+                <div class="flex items-center justify-between p-2 rounded-lg bg-gray-50">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors[index]}"></div>
+                        <span class="text-sm font-medium">${getPaymentMethodName(method)}</span>
+                    </div>
+                    <span class="text-sm font-bold text-gray-600">${counts[index]}</span>
+                </div>
+            `).join('');
+        }
+        // Load transactions data
+        async function loadTransactions() {
+            try {
+                const { data, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+
+                if (error) throw error;
+
+                dashboardData.transactions = data;
+
+                const tableBody = document.getElementById('transactions-table');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد معاملات مسجلة</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = data.map(transaction => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.type === 'budget_add' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${transaction.type === 'budget_add' ? '💰 إضافة ميزانية' : '📤 خصم بدل'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(transaction.amount)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${transaction.description || 'بدون وصف'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(transaction.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactions-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات المعاملات</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load all data
+        async function loadAllData() {
+            try {
+                updateConnectionStatus(false, '- جاري التحميل...');
+                await Promise.all([
+                    loadBudget(),
+                    loadEmployees(),
+                    loadAllowances(),
+                    loadTransactions()
+                ]);
+                updateConnectionStatus(true);
+                document.getElementById('last-update').textContent = new Date().toLocaleString('ar-EG');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                updateConnectionStatus(false, '- خطأ في الاتصال');
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            // Destroy existing charts
+            Object.values(dashboardData.charts).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+            dashboardData.charts = {};
+            
+            loadAllData();
+        }
+
+        // Setup real-time subscriptions
+        function setupRealtime() {
+            // Subscribe to budget changes
+            supabase
+                .channel('budget-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'budget' }, () => {
+                    loadBudget();
+                })
+                .subscribe();
+
+            // Subscribe to employee changes
+            supabase
+                .channel('employee-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+                    loadEmployees();
+                })
+                .subscribe();
+
+            // Subscribe to allowance changes
+            supabase
+                .channel('allowance-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'allowance_records' }, () => {
+                    loadAllowances();
+                })
+                .subscribe();
+
+            // Subscribe to transaction changes
+            supabase
+                .channel('transaction-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+                    loadTransactions();
+                })
+                .subscribe();
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set Chart.js defaults for RTL
+            Chart.defaults.font.family = 'Tahoma';
+            Chart.defaults.plugins.legend.rtl = true;
+            Chart.defaults.plugins.tooltip.rtl = true;
+            
+            loadAllData();
+            setupRealtime();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadAllData, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>
