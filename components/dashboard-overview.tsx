@@ -90,15 +90,15 @@ export function DashboardOverview() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-EG", {
       style: "currency",
-      currency: "SAR",
+      currency: "EGP",
       minimumFractionDigits: 0,
     }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ar-SA", {
+    return new Date(dateString).toLocaleDateString("ar-EG", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -127,7 +127,7 @@ export function DashboardOverview() {
   const getDailyAllowances = () => {
     const dailyData: { [key: string]: number } = {}
     allowances.forEach((allowance) => {
-      const date = new Date(allowance.createdAt).toLocaleDateString("ar-SA")
+      const date = new Date(allowance.createdAt).toLocaleDateString("ar-EG")
       dailyData[date] = (dailyData[date] || 0) + allowance.totalAmount
     })
 

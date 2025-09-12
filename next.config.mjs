@@ -6,6 +6,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  i18n: {
+    locales: ['ar-EG'],
+    defaultLocale: 'ar-EG',
+  },
   images: {
     unoptimized: true,
   },

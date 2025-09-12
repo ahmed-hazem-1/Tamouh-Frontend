@@ -151,15 +151,15 @@ export function AllowanceTracking() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-EG", {
       style: "currency",
-      currency: "SAR",
+      currency: "EGP",
       minimumFractionDigits: 0,
     }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ar-SA", {
+    return new Date(dateString).toLocaleDateString("ar-EG", {
       year: "numeric",
       month: "short",
       day: "numeric",

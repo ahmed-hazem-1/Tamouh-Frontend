@@ -74,9 +74,9 @@ export function BudgetManagement() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-EG", {
       style: "currency",
-      currency: "SAR",
+      currency: "EGP",
       minimumFractionDigits: 0,
     }).format(amount)
   }

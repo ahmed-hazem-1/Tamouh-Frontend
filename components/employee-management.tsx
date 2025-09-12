@@ -135,9 +135,9 @@ export function EmployeeManagement() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-EG", {
       style: "currency",
-      currency: "SAR",
+      currency: "EGP",
       minimumFractionDigits: 0,
     }).format(amount)
   }
@@ -216,9 +216,11 @@ export function EmployeeManagement() {
                     <SelectValue placeholder="اختر نوع المحفظة" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="stc_pay">STC Pay</SelectItem>
-                    <SelectItem value="apple_pay">Apple Pay</SelectItem>
-                    <SelectItem value="mada_pay">مدى Pay</SelectItem>
+                    <SelectItem value="instapay">InstaPay</SelectItem>
+                    <SelectItem value="vodafone_cash">Vodafone Cash</SelectItem>
+                    <SelectItem value="orange_cash">Orange Cash</SelectItem>
+                    <SelectItem value="etisalat_cash">Etisalat Cash</SelectItem>
+                    <SelectItem value="fawry">Fawry</SelectItem>
                     <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
                     <SelectItem value="cash">نقداً</SelectItem>
                   </SelectContent>
