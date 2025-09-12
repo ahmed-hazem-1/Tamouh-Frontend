@@ -177,11 +177,6 @@ export function AllowanceTracking() {
     return allowances.reduce((sum, allowance) => sum + allowance.totalAmount, 0)
   }
 
-  const getDaysOptions = () => {
-    const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
-    return days
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -231,26 +226,21 @@ export function AllowanceTracking() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="day">اليوم</Label>
-                  <Select value={formData.day} onValueChange={(value) => setFormData({ ...formData, day: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر اليوم" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getDaysOptions().map((day) => (
-                        <SelectItem key={day} value={day}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="day">التاريخ</Label>
+                  <Input
+                    id="day"
+                    type="date"
+                    value={formData.day}
+                    onChange={(e) => setFormData({ ...formData, day: e.target.value })}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="location">المكان</Label>
                   <Input
                     id="location"
-                    placeholder="مثال: الرياض - جدة"
+                    placeholder="مثال: القاهرة - الإسكندرية"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     required
@@ -433,13 +423,13 @@ export function AllowanceTracking() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>الموظف</TableHead>
-                    <TableHead>اليوم</TableHead>
+                    <TableHead>التاريخ</TableHead>
                     <TableHead>المكان</TableHead>
                     <TableHead>الوقت</TableHead>
                     <TableHead>مبلغ الذهاب</TableHead>
                     <TableHead>مبلغ العودة</TableHead>
                     <TableHead>المجموع</TableHead>
-                    <TableHead>التاريخ</TableHead>
+                    <TableHead>تاريخ الإدخال</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -449,7 +439,14 @@ export function AllowanceTracking() {
                       <TableRow key={allowance.id}>
                         <TableCell className="font-medium">{getEmployeeName(allowance.employeeId)}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{allowance.day}</Badge>
+                          <Badge variant="outline">
+                            {new Date(allowance.day).toLocaleDateString("ar-EG", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              weekday: "short"
+                            })}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">

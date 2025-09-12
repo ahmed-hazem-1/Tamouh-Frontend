@@ -196,7 +196,7 @@ export async function addEmployee(employee: Omit<Employee, "id" | "createdAt">):
       employee_id: employee.employeeId,
       phone: employee.phone,
       wallet_type: employee.walletType,
-      total_allowance: employee.totalAllowance,
+      total_allowance: 0, // Always start with 0, will be calculated automatically
     })
     .select()
     .single()
@@ -343,16 +343,11 @@ export async function addAllowanceRecord(record: Omit<AllowanceRecord, "id" | "c
     return null
   }
 
-  // Update employee total allowance
-  const { error: updateError } = await supabase
-    .from('employees')
-    .update({
-      total_allowance: supabase.rpc('increment_total_allowance', {
-        emp_id: record.employeeId,
-        amount: record.totalAmount
-      })
-    })
-    .eq('id', record.employeeId)
+  // Automatically recalculate employee total allowance
+  const recalculateSuccess = await updateEmployeeTotalAllowance(record.employeeId)
+  if (!recalculateSuccess) {
+    console.warn('Warning: Failed to update employee total allowance automatically')
+  }
 
   return {
     id: data.id,
@@ -366,6 +361,136 @@ export async function addAllowanceRecord(record: Omit<AllowanceRecord, "id" | "c
     totalAmount: data.total_amount,
     notes: data.notes || '',
     createdAt: data.created_at,
+  }
+}
+
+// Delete allowance record and update employee total
+export async function deleteAllowanceRecord(recordId: string): Promise<boolean> {
+  try {
+    // First get the record to know which employee to update
+    const { data: record, error: fetchError } = await supabase
+      .from('allowance_records')
+      .select('employee_id')
+      .eq('id', recordId)
+      .single()
+
+    if (fetchError) {
+      console.error('Error fetching allowance record:', fetchError)
+      return false
+    }
+
+    // Delete the record
+    const { error: deleteError } = await supabase
+      .from('allowance_records')
+      .delete()
+      .eq('id', recordId)
+
+    if (deleteError) {
+      console.error('Error deleting allowance record:', deleteError)
+      return false
+    }
+
+    // Update employee total allowance
+    await updateEmployeeTotalAllowance(record.employee_id)
+
+    return true
+  } catch (error) {
+    console.error('Error in deleteAllowanceRecord:', error)
+    return false
+  }
+}
+
+// Update specific employee's total allowance based on actual records
+export async function updateEmployeeTotalAllowance(employeeId: string): Promise<boolean> {
+  try {
+    // Get all allowance records for this employee
+    const { data: allowanceData, error: allowanceError } = await supabase
+      .from('allowance_records')
+      .select('total_amount')
+      .eq('employee_id', employeeId)
+    
+    if (allowanceError) {
+      console.error('Error fetching allowances for employee:', allowanceError)
+      return false
+    }
+
+    // Calculate total
+    const total = allowanceData.reduce((sum, record) => sum + record.total_amount, 0)
+
+    // Update employee's total allowance
+    const { error: updateError } = await supabase
+      .from('employees')
+      .update({ total_allowance: total })
+      .eq('id', employeeId)
+
+    if (updateError) {
+      console.error('Error updating employee total allowance:', updateError)
+      return false
+    }
+
+    return true
+    
+  } catch (error) {
+    console.error('Error in updateEmployeeTotalAllowance:', error)
+    return false
+  }
+}
+
+// Recalculate employee total allowances based on actual allowance records
+export async function recalculateEmployeeTotals(): Promise<boolean> {
+  try {
+    // Get all allowance records grouped by employee
+    const { data: allowanceData, error: allowanceError } = await supabase
+      .from('allowance_records')
+      .select('employee_id, total_amount')
+    
+    if (allowanceError) {
+      console.error('Error fetching allowances for recalculation:', allowanceError)
+      return false
+    }
+
+    // Calculate totals per employee
+    const employeeTotals = allowanceData.reduce((acc, record) => {
+      const empId = record.employee_id
+      acc[empId] = (acc[empId] || 0) + record.total_amount
+      return acc
+    }, {} as Record<string, number>)
+
+    // Update each employee's total
+    const updatePromises = Object.entries(employeeTotals).map(([empId, total]) =>
+      supabase
+        .from('employees')
+        .update({ total_allowance: total })
+        .eq('id', empId)
+    )
+
+    // Also reset employees with no allowances to 0
+    const { data: allEmployees, error: empError } = await supabase
+      .from('employees')
+      .select('id')
+    
+    if (!empError && allEmployees) {
+      const employeesWithNoAllowances = allEmployees
+        .filter(emp => !employeeTotals[emp.id])
+        .map(emp => emp.id)
+      
+      const resetPromises = employeesWithNoAllowances.map(empId =>
+        supabase
+          .from('employees')
+          .update({ total_allowance: 0 })
+          .eq('id', empId)
+      )
+      
+      updatePromises.push(...resetPromises)
+    }
+
+    await Promise.all(updatePromises)
+    console.log('Employee totals recalculated successfully')
+    return true
+    
+  } catch (error) {
+    console.error('Error recalculating employee totals:', error)
+    return false
   }
 }
 

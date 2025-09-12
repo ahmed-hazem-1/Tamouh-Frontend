@@ -8,6 +8,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to recalculate employee total allowance from actual records
+CREATE OR REPLACE FUNCTION recalculate_employee_total(emp_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE employees 
+  SET total_allowance = (
+    SELECT COALESCE(SUM(total_amount), 0) 
+    FROM allowance_records 
+    WHERE employee_id = emp_id
+  )
+  WHERE id = emp_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function to automatically recalculate employee totals
+CREATE OR REPLACE FUNCTION trigger_recalculate_employee_total()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Handle INSERT and UPDATE
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    PERFORM recalculate_employee_total(NEW.employee_id);
+    RETURN NEW;
+  END IF;
+  
+  -- Handle DELETE
+  IF TG_OP = 'DELETE' THEN
+    PERFORM recalculate_employee_total(OLD.employee_id);
+    RETURN OLD;
+  END IF;
+  
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Tamouh Management System Database Schema for Supabase
 -- Configured for Egypt: Currency in Egyptian Pounds (EGP)
 -- Payment methods: Egyptian mobile wallets and local systems
@@ -206,3 +240,23 @@ SELECT location_name, governorate FROM (VALUES
 -- ✅ Arabic language support
 -- ✅ Real-time capabilities enabled
 -- ✅ Row Level Security configured
+
+-- Create triggers for updated_at columns
+DROP TRIGGER IF EXISTS update_employees_updated_at ON employees;
+CREATE TRIGGER update_employees_updated_at 
+    BEFORE UPDATE ON employees 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_allowance_records_updated_at ON allowance_records;
+CREATE TRIGGER update_allowance_records_updated_at 
+    BEFORE UPDATE ON allowance_records 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger for automatic employee total recalculation
+DROP TRIGGER IF EXISTS recalculate_employee_total_trigger ON allowance_records;
+CREATE TRIGGER recalculate_employee_total_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON allowance_records
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_recalculate_employee_total();
