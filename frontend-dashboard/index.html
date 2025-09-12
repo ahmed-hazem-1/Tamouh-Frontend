@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة بيانات نظام إدارة طموح</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -104,33 +104,643 @@
         .grid-auto-fit {
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            /* Header responsive styles */
+            .header-container {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 12px;
+                height: auto !important;
+                padding: 16px 0;
+            }
+            
+            .header-title {
+                font-size: 1.25rem !important;
+                text-align: center;
+                margin-bottom: 8px;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .refresh-button {
+                width: 100%;
+                max-width: 200px;
+                justify-content: center;
+            }
+            
+            /* Statistics cards */
+            .stat-card {
+                padding: 16px !important;
+            }
+            
+            .stat-card .text-lg {
+                font-size: 16px !important;
+            }
+            
+            .stat-card .text-2xl {
+                font-size: 20px !important;
+            }
+            
+            /* Main content padding */
+            .main-content {
+                padding: 16px !important;
+            }
+            
+            /* Chart containers */
+            .chart-container {
+                height: 250px !important;
+            }
+            
+            /* Table responsiveness */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+                border-radius: 8px;
+                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+            }
+            
+            .table-container table {
+                min-width: 700px;
+                width: max-content;
+            }
+            
+            .table-container th,
+            .table-container td {
+                padding: 8px 12px !important;
+                font-size: 12px !important;
+                margin: 0 15px;
+            }
+            
+            /* Grid adjustments */
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+
+            }
+            
+            .secondary-stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            
+            .tables-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            
+            /* Card titles */
+            .bg-white h3 {
+                font-size: 16px !important;
+            }
+            
+            /* Footer adjustments */
+            footer {
+                margin-top: 24px !important;
+            }
+            
+            footer p {
+                font-size: 12px !important;
+                padding: 0 16px;
+            }
+        }
+
+        /* Tablet styles */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .secondary-stats-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .chart-container {
+                height: 280px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Extra small screens */
+            .header-title {
+                font-size: 1.125rem !important;
+            }
+            
+            .stat-card {
+                padding: 12px !important;
+            }
+            
+            .stat-card .text-lg {
+                font-size: 14px !important;
+            }
+            
+            .stat-card .text-2xl {
+                font-size: 18px !important;
+            }
+            
+            .secondary-stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .chart-container {
+                height: 200px !important;
+            }
+            
+            .table-container th,
+            .table-container td {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+            }
+            
+            .main-content {
+                padding: 12px !important;
+            }
+            
+            /* Smaller card content on very small screens */
+            .stat-card .flex-shrink-0 .w-8 {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            
+            .stat-card .text-lg {
+                font-size: 12px !important;
+            }
+            
+            .stat-card .text-xs {
+                font-size: 10px !important;
+            }
+            
+            /* Payment badge adjustments */
+            .payment-badge {
+                font-size: 10px !important;
+                padding: 2px 4px !important;
+            }
+        }
+
+        /* Landscape mobile styles */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .chart-container {
+                height: 200px !important;
+            }
+            
+            .main-content {
+                padding: 12px !important;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (max-width: 768px) {
+            /* Ensure buttons are touch-friendly */
+            button {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Smooth scrolling for tables */
+            .table-container {
+                scroll-behavior: smooth;
+            }
+            
+            /* Prevent text selection on cards for better touch experience */
+            .stat-card {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+            
+            /* Better spacing for touch targets */
+            .header-actions {
+                gap: 12px;
+            }
+            
+            /* Ensure hover effects work on touch devices */
+            .stat-card:hover,
+            .stat-card:active {
+                transform: translateY(-1px);
+            }
+        }
+
+        /* High DPI display optimizations */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .loading {
+                border-width: 2px;
+            }
+        }
+
+        /* Navigation Styles */
+        .nav-link {
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #f3f4f6;
+        }
+
+        .nav-link.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .mobile-nav-link {
+            font-weight: 500;
+        }
+
+        .mobile-nav-link:hover {
+            transform: translateX(4px);
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .scroll-mt-20 {
+            scroll-margin-top: 5rem;
+        }
+
+        /* Enhanced Mobile Table Styles */
+        @media (max-width: 768px) {
+            /* Mobile table cards */
+            .mobile-table-card {
+                display: none;
+                background: white;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e5e7eb;
+            }
+
+            .mobile-table-card.active {
+                display: block;
+            }
+
+            .mobile-card-header {
+                font-weight: bold;
+                font-size: 16px;
+                color: #374151;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .mobile-card-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 0;
+                border-bottom: 1px solid #f3f4f6;
+            }
+
+            .mobile-card-row:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-card-label {
+                font-weight: 500;
+                color: #6b7280;
+                font-size: 14px;
+            }
+
+            .mobile-card-value {
+                font-weight: 500;
+                color: #374151;
+                font-size: 14px;
+                text-align: left;
+            }
+
+            /* Table toggle buttons */
+            .table-view-toggle {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 16px;
+                background: #f9fafb;
+                border-radius: 8px;
+                padding: 4px;
+            }
+
+            .toggle-btn {
+                flex: 1;
+                padding: 8px 16px;
+                border: none;
+                background: transparent;
+                border-radius: 6px;
+                font-weight: 500;
+                font-size: 14px;
+                color: #6b7280;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .toggle-btn.active {
+                background: white;
+                color: #374151;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Enhanced navigation for mobile */
+            .header-container {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0;
+                height: auto !important;
+                padding: 12px 0;
+            }
+
+            .header-title {
+                font-size: 1.125rem !important;
+                text-align: center;
+                margin-bottom: 0;
+                order: 1;
+            }
+
+            .header-actions {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                order: 2;
+                margin-top: 12px;
+            }
+
+            #mobile-menu-btn {
+                order: 1;
+            }
+
+            #connection-status {
+                order: 2;
+                flex: 1;
+                justify-content: center;
+            }
+
+            .refresh-button {
+                order: 3;
+                width: auto;
+                max-width: none;
+                min-width: 120px;
+            }
+
+            /* Better table header stickiness */
+            .sticky-header {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                background: #f9fafb;
+            }
+        }
+
+        /* Enhanced scroll indicators for tables */
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            border-radius: 8px;
+            background: white;
+            padding-right: 0; /* Remove any right padding */
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Scroll shadows for better UX - adjusted to not crop content */
+        .table-container::before,
+        .table-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15px; /* Reduced from 20px */
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        .table-container::before {
+            left: 0;
+            background: linear-gradient(to right, rgba(255,255,255,0.8), transparent);
+            opacity: 0;
+        }
+
+        .table-container::after {
+            right: 0;
+            background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+            opacity: 0;
+        }
+
+        .table-container.can-scroll-left::before {
+            opacity: 1;
+        }
+
+        .table-container.can-scroll-right::after {
+            opacity: 1;
+        }
+
+        /* Table styling improvements */
+        .table-container table {
+            min-width: 700px;
+            width: max-content;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0; /* Ensure no margins */
+        }
+
+        .table-container th,
+        .table-container td {
+            white-space: nowrap;
+            border-right: 1px solid #f1f5f9;
+            position: relative;
+            box-sizing: border-box; /* Ensure proper box sizing */
+        }
+
+        .table-container th:last-child,
+        .table-container td:last-child {
+            border-right: none;
+            padding-right: 24px; /* Ensure right padding for last column */
+        }
+
+        .table-container th:first-child,
+        .table-container td:first-child {
+            padding-left: 24px; /* Ensure left padding for first column */
+        }
+
+        /* Mobile table improvements */
+        @media (max-width: 768px) {
+            .table-container {
+                margin: 0 ;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                padding-right: 0; /* Ensure no right padding */
+            }
+
+            .table-container table {
+                min-width: 500px; /* Reduced from 600px */
+            }
+
+            /* Override default padding for mobile - ensure content isn't cropped */
+            .table-container th:first-child,
+            .table-container td:first-child {
+                padding-left: 16px !important;
+            }
+
+            .table-container th:last-child,
+            .table-container td:last-child {
+                padding-right: 16px !important;
+            }
+
+            /* Specific adjustments for problematic tables */
+            .small-table-container {
+                margin: 0 ;
+                padding-right: 0;
+            }
+
+            .small-table-container table {
+                min-width: 450px; /* Even smaller for the two problematic tables */
+            }
+
+            .small-table-container th,
+            .small-table-container td {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+            }
+
+            /* Override for first and last columns in small tables */
+            .small-table-container th:first-child,
+            .small-table-container td:first-child {
+                padding-left: 12px !important;
+            }
+
+            .small-table-container th:last-child,
+            .small-table-container td:last-child {
+                padding-right: 12px !important;
+            }
+
+            /* Compress text in mobile tables */
+            .mobile-compact th,
+            .mobile-compact td {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+                line-height: 1.2;
+            }
+
+            /* Override for first and last columns in compact tables */
+            .mobile-compact th:first-child,
+            .mobile-compact td:first-child {
+                padding-left: 8px !important;
+            }
+
+            .mobile-compact th:last-child,
+            .mobile-compact td:last-child {
+                padding-right: 8px !important;
+            }
+
+            /* Hide less important columns on very small screens */
+            @media (max-width: 480px) {
+                .hide-on-small {
+                    display: none;
+                }
+            }
+
+            /* Disable scroll shadows on mobile to prevent cropping */
+            .table-container::before,
+            .table-container::after {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-16 header-container">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-gray-900">📊 لوحة بيانات نظام إدارة طموح</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 header-title">📊 لوحة بيانات نظام إدارة طموح</h1>
                 </div>
-                <div class="flex items-center space-x-4">
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8 ml-8">
+                    <a href="#statistics" class="nav-link text-gray-600 hover:text-blue-600 transition-colors duration-200">الإحصائيات</a>
+                    <a href="#charts" class="nav-link text-gray-600 hover:text-blue-600 transition-colors duration-200">الرسوم البيانية</a>
+                    <a href="#employees" class="nav-link text-gray-600 hover:text-blue-600 transition-colors duration-200">الموظفين</a>
+                    <a href="#transactions" class="nav-link text-gray-600 hover:text-blue-600 transition-colors duration-200">المعاملات</a>
+                </nav>
+                
+                <div class="flex items-center space-x-4 header-actions">
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-btn" class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
                     <div id="connection-status" class="flex items-center">
                         <div class="loading"></div>
                         <span class="mr-2 text-sm text-gray-600">جاري الاتصال...</span>
                     </div>
-                    <button onclick="refreshData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                    <button onclick="refreshData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm refresh-button">
                         🔄 تحديث البيانات
                     </button>
                 </div>
             </div>
         </div>
+        
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <div class="px-4 py-2 space-y-1">
+                <a href="#statistics" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200">📊 الإحصائيات</a>
+                <a href="#charts" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200">📈 الرسوم البيانية</a>
+                <a href="#employees" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200">👥 الموظفين</a>
+                <a href="#transactions" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200">💰 المعاملات</a>
+            </div>
+        </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main-content">
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section id="statistics" class="scroll-mt-20">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 stats-grid">
             <!-- Budget Card -->
             <div class="stat-card p-6">
                 <div class="flex items-center">
@@ -215,10 +825,11 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- Additional Statistics Row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 secondary-stats-grid">
             <!-- Total Allowances -->
             <div class="stat-card p-4">
                 <div class="text-center">
@@ -266,7 +877,8 @@
         </div>
 
         <!-- Data Tables -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <section id="charts" class="scroll-mt-20">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 charts-grid">
             <!-- Charts Section -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Budget vs Usage Chart -->
@@ -296,32 +908,35 @@
                     <!-- Payment methods will be populated here -->
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- Detailed Tables -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section id="employees" class="scroll-mt-20">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 tables-grid">
             <!-- Top Employees Table -->
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">🏆 أعلى الموظفين في البدلات</h3>
                 </div>
-                <div class="overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-hidden rounded-lg">
+                    <div class="overflow-x-auto table-container small-table-container">
+                        <table class="min-w-full divide-y divide-gray-200 mobile-compact">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المرتبة</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي البدلات</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد الرحلات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hide-on-small">عدد الرحلات</th>
                                 </tr>
                             </thead>
                             <tbody id="top-employees-table" class="bg-white divide-y divide-gray-200">
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">
                                         <div class="loading mx-auto"></div>
                                         <div class="mt-2">جاري تحميل البيانات...</div>
                                     </td>
+                                    <td class="hide-on-small"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -331,40 +946,42 @@
             <!-- Recent Allowances Table -->
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">� آخر البدلات المفصلة</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">📋 آخر البدلات المفصلة</h3>
                 </div>
-                <div class="overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-hidden rounded-lg">
+                    <div class="overflow-x-auto table-container small-table-container">
+                        <table class="min-w-full divide-y divide-gray-200 mobile-compact">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموظف</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموقع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hide-on-small">الموقع</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
                                 </tr>
                             </thead>
                             <tbody id="allowances-table" class="bg-white divide-y divide-gray-200">
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">
                                         <div class="loading mx-auto"></div>
                                         <div class="mt-2">جاري تحميل البيانات...</div>
                                     </td>
+                                    <td class="hide-on-small"></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- All Employees Table -->
         <div class="mt-8 bg-white shadow rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">� جميع الموظفين</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">👥 جميع الموظفين</h3>
             </div>
-            <div class="overflow-hidden">
-                <div class="overflow-x-auto">
+            <div class="overflow-hidden rounded-lg">
+                <div class="overflow-x-auto table-container">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -390,12 +1007,13 @@
         </div>
 
         <!-- Recent Transactions -->
-        <div class="mt-8 bg-white shadow rounded-lg">
+        <section id="transactions" class="scroll-mt-20">
+            <div class="mt-8 bg-white shadow rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">💰 آخر المعاملات</h3>
             </div>
-            <div class="overflow-hidden">
-                <div class="overflow-x-auto">
+            <div class="overflow-hidden rounded-lg">
+                <div class="overflow-x-auto table-container">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -416,7 +1034,8 @@
                     </table>
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -607,6 +1226,9 @@
                     `).join('');
                 }
 
+                // Reinitialize table enhancements after data load
+                setTimeout(initializeAllTableScrollIndicators, 100);
+
                 // Load top employees
                 loadTopEmployees();
                 updatePaymentMethodsChart();
@@ -664,7 +1286,8 @@
                 if (recentAllowances.length === 0) {
                     tableBody.innerHTML = `
                         <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد بدلات مسجلة</td>
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500">لا توجد بدلات مسجلة</td>
+                            <td class="hide-on-small"></td>
                         </tr>
                     `;
                 } else {
@@ -674,11 +1297,14 @@
                                 ${allowance.employees ? allowance.employees.name : 'غير معروف'}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateWithWeekday(allowance.day)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${allowance.location || 'غير محدد'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hide-on-small">${allowance.location || 'غير محدد'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${formatCurrency(allowance.total_amount)}</td>
                         </tr>
                     `).join('');
                 }
+
+                // Reinitialize table enhancements after data load
+                setTimeout(initializeAllTableScrollIndicators, 100);
 
                 // Automatically recalculate employee totals when loading allowances
                 await autoRecalculateEmployeeTotals();
@@ -790,7 +1416,8 @@
             if (sortedEmployees.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد بيانات</td>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">لا توجد بيانات</td>
+                        <td class="hide-on-small"></td>
                     </tr>
                 `;
             } else {
@@ -803,10 +1430,13 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.name}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${formatCurrency(employee.totalAmount)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${employee.tripCount} رحلة</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hide-on-small">${employee.tripCount} رحلة</td>
                     </tr>
                 `).join('');
             }
+            
+            // Reinitialize table enhancements after data load
+            setTimeout(initializeAllTableScrollIndicators, 100);
         }
 
         // Update budget chart
@@ -1035,6 +1665,9 @@
                         </tr>
                     `).join('');
                 }
+                
+                // Reinitialize table enhancements after data load
+                setTimeout(initializeAllTableScrollIndicators, 100);
             } catch (error) {
                 console.error('Error loading transactions:', error);
                 document.getElementById('transactions-table').innerHTML = `
@@ -1118,12 +1751,309 @@
             Chart.defaults.plugins.legend.rtl = true;
             Chart.defaults.plugins.tooltip.rtl = true;
             
+            // Initialize navigation
+            initializeNavigation();
+            
+            // Initialize mobile table enhancements
+            initializeMobileTableEnhancements();
+            
             loadAllData();
             setupRealtime();
             
             // Auto-refresh every 5 minutes
             setInterval(loadAllData, 5 * 60 * 1000);
         });
+
+        // Navigation functionality
+        function initializeNavigation() {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    
+                    // Update button icon
+                    const svg = mobileMenuBtn.querySelector('svg path');
+                    if (mobileMenu.classList.contains('hidden')) {
+                        svg.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                    } else {
+                        svg.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+                    }
+                });
+            }
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // Close mobile menu if open
+                        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                            const svg = mobileMenuBtn.querySelector('svg path');
+                            svg.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                        }
+                        
+                        // Update active navigation item
+                        updateActiveNavItem(targetId);
+                    }
+                });
+            });
+
+            // Update navigation on scroll
+            window.addEventListener('scroll', throttle(updateNavigationOnScroll, 100));
+        }
+
+        // Update active navigation item
+        function updateActiveNavItem(activeId) {
+            document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === activeId) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Update navigation based on scroll position
+        function updateNavigationOnScroll() {
+            const sections = ['#statistics', '#charts', '#employees', '#transactions'];
+            const scrollPos = window.scrollY + 100;
+            
+            let activeSection = sections[0];
+            
+            sections.forEach(sectionId => {
+                const element = document.querySelector(sectionId);
+                if (element && element.offsetTop <= scrollPos) {
+                    activeSection = sectionId;
+                }
+            });
+            
+            updateActiveNavItem(activeSection);
+        }
+
+        // Throttle function for performance
+        function throttle(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Mobile table enhancements
+        function initializeMobileTableEnhancements() {
+            // Initialize scroll indicators for all tables
+            initializeAllTableScrollIndicators();
+            
+            if (window.innerWidth <= 768) {
+                enhanceTablesForMobile();
+            }
+
+            // Re-enhance on window resize
+            window.addEventListener('resize', throttle(function() {
+                if (window.innerWidth <= 768) {
+                    enhanceTablesForMobile();
+                } else {
+                    restoreDesktopTables();
+                    // Re-initialize scroll indicators for desktop
+                    initializeAllTableScrollIndicators();
+                }
+            }, 250));
+        }
+
+        // Initialize scroll indicators for all tables
+        function initializeAllTableScrollIndicators() {
+            const tables = document.querySelectorAll('.table-container table');
+            tables.forEach(table => {
+                addScrollIndicators(table);
+            });
+        }
+
+        // Enhance tables for mobile view
+        function enhanceTablesForMobile() {
+            const tables = document.querySelectorAll('.table-container table');
+            
+            tables.forEach(table => {
+                if (!table.dataset.mobileEnhanced) {
+                    addTableViewToggle(table);
+                    addScrollIndicators(table);
+                    table.dataset.mobileEnhanced = 'true';
+                }
+            });
+            
+            // Also add scroll indicators for desktop
+            if (window.innerWidth > 768) {
+                tables.forEach(table => {
+                    addScrollIndicators(table);
+                });
+            }
+        }
+
+        // Add view toggle buttons for tables
+        function addTableViewToggle(table) {
+            const container = table.closest('.bg-white');
+            if (!container || container.querySelector('.table-view-toggle')) return;
+
+            const toggle = document.createElement('div');
+            toggle.className = 'table-view-toggle';
+            toggle.innerHTML = `
+                <button class="toggle-btn active" data-view="table">📋 جدول</button>
+                <button class="toggle-btn" data-view="cards">📱 بطاقات</button>
+            `;
+
+            const tableContainer = table.closest('.table-container');
+            container.insertBefore(toggle, tableContainer);
+
+            // Add event listeners
+            toggle.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (view === 'cards') {
+                        showCardView(table);
+                    } else {
+                        showTableView(table);
+                    }
+                });
+            });
+        }
+
+        // Show card view for mobile
+        function showCardView(table) {
+            const tableContainer = table.closest('.table-container');
+            let cardContainer = tableContainer.parentNode.querySelector('.mobile-cards-container');
+            
+            if (!cardContainer) {
+                cardContainer = createCardView(table);
+                tableContainer.parentNode.insertBefore(cardContainer, tableContainer);
+            }
+            
+            tableContainer.style.display = 'none';
+            cardContainer.style.display = 'block';
+        }
+
+        // Show table view
+        function showTableView(table) {
+            const tableContainer = table.closest('.table-container');
+            const cardContainer = tableContainer.parentNode.querySelector('.mobile-cards-container');
+            
+            tableContainer.style.display = 'block';
+            if (cardContainer) {
+                cardContainer.style.display = 'none';
+            }
+        }
+
+        // Create card view from table
+        function createCardView(table) {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'mobile-cards-container';
+            cardContainer.style.display = 'none';
+
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach((row, index) => {
+                if (row.cells.length === 1 && (row.textContent.includes('جاري تحميل') || row.textContent.includes('لا توجد'))) {
+                    const messageCard = document.createElement('div');
+                    messageCard.className = 'mobile-table-card active';
+                    messageCard.innerHTML = `<div class="text-center text-gray-500">${row.textContent}</div>`;
+                    cardContainer.appendChild(messageCard);
+                    return;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'mobile-table-card active';
+                
+                let cardContent = `<div class="mobile-card-header">العنصر ${index + 1}</div>`;
+                
+                Array.from(row.cells).forEach((cell, cellIndex) => {
+                    if (cellIndex < headers.length) {
+                        cardContent += `
+                            <div class="mobile-card-row">
+                                <span class="mobile-card-label">${headers[cellIndex]}</span>
+                                <span class="mobile-card-value">${cell.innerHTML}</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                card.innerHTML = cardContent;
+                cardContainer.appendChild(card);
+            });
+
+            return cardContainer;
+        }
+
+        // Add scroll indicators for tables
+        function addScrollIndicators(table) {
+            const container = table.closest('.table-container');
+            if (!container) return;
+
+            function updateScrollIndicators() {
+                const scrollLeft = container.scrollLeft;
+                const scrollWidth = container.scrollWidth;
+                const clientWidth = container.clientWidth;
+                
+                // Remove existing classes
+                container.classList.remove('can-scroll-left', 'can-scroll-right');
+                
+                // Only add scroll indicators on desktop to prevent mobile cropping
+                if (window.innerWidth > 768) {
+                    // Add appropriate classes based on scroll position
+                    if (scrollLeft > 5) {
+                        container.classList.add('can-scroll-left');
+                    }
+                    
+                    if (scrollLeft < scrollWidth - clientWidth - 5) {
+                        container.classList.add('can-scroll-right');
+                    }
+                }
+            }
+
+            container.addEventListener('scroll', updateScrollIndicators);
+            
+            // Initial check
+            setTimeout(updateScrollIndicators, 100);
+            
+            // Recheck on window resize
+            window.addEventListener('resize', updateScrollIndicators);
+        }
+
+        // Restore desktop table view
+        function restoreDesktopTables() {
+            document.querySelectorAll('.table-view-toggle').forEach(toggle => {
+                toggle.remove();
+            });
+            
+            document.querySelectorAll('.mobile-cards-container').forEach(container => {
+                container.remove();
+            });
+            
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.style.display = 'block';
+                container.classList.remove('can-scroll-left', 'can-scroll-right');
+            });
+            
+            document.querySelectorAll('table').forEach(table => {
+                delete table.dataset.mobileEnhanced;
+            });
+        }
     </script>
 </body>
 </html>
