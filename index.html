@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة بيانات نظام إدارة طموح</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Tahoma', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Tahoma', 'Arial', sans-serif;
+        }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .payment-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .payment-instapay { background-color: #e1f5fe; color: #0277bd; }
+        .payment-vodafone { background-color: #fce4ec; color: #c2185b; }
+        .payment-orange { background-color: #fff3e0; color: #f57c00; }
+        .payment-etisalat { background-color: #e8f5e8; color: #388e3c; }
+        .payment-fawry { background-color: #f3e5f5; color: #7b1fa2; }
+        .payment-bank { background-color: #e3f2fd; color: #1976d2; }
+        .payment-cash { background-color: #e8f5e8; color: #4caf50; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">📊 لوحة بيانات نظام إدارة طموح</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connection-status" class="flex items-center">
+                        <div class="loading"></div>
+                        <span class="mr-2 text-sm text-gray-600">جاري الاتصال...</span>
+                    </div>
+                    <button onclick="refreshData()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        🔄 تحديث البيانات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">💰</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">إجمالي الميزانية</dt>
+                            <dd id="total-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Used Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">📉</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">المبلغ المستخدم</dt>
+                            <dd id="used-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remaining Budget Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">💳</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">المبلغ المتبقي</dt>
+                            <dd id="remaining-budget" class="text-lg font-medium text-gray-900">0 ج.م.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Employees Card -->
+            <div class="stat-card p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-lg">👥</span>
+                        </div>
+                    </div>
+                    <div class="mr-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">إجمالي الموظفين</dt>
+                            <dd id="total-employees" class="text-lg font-medium text-gray-900">0</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Employees Table -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">👥 الموظفين</h3>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم الموظف</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">طريقة الدفع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي البدلات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        <div class="loading mx-auto"></div>
+                                        <div class="mt-2">جاري تحميل البيانات...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Allowances Table -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">📋 آخر البدلات</h3>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموقع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ الإجمالي</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allowances-table" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">
+                                        <div class="loading mx-auto"></div>
+                                        <div class="mt-2">جاري تحميل البيانات...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="mt-8 bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">💰 آخر المعاملات</h3>
+            </div>
+            <div class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع المعاملة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="loading mx-auto"></div>
+                                    <div class="mt-2">جاري تحميل البيانات...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="text-center text-sm text-gray-500">
+                <p>© 2025 نظام إدارة تموح - لوحة البيانات | آخر تحديث: <span id="last-update">---</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://dqexwiokpeyjdrxfgzfs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxZXh3aW9rcGV5amRyeGZnemZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NTgwNjYsImV4cCI6MjA3MzIzNDA2Nn0.ZyfXRWS4waoIx6IMLouw8c7iH1CtqI3PRqJQQ09tDKQ';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Currency formatter
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP',
+                minimumFractionDigits: 0,
+            }).format(amount);
+        }
+
+        // Date formatter
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+
+        // Get payment method display name
+        function getPaymentMethodName(method) {
+            const methods = {
+                'instapay': 'InstaPay',
+                'vodafone_cash': 'Vodafone Cash',
+                'orange_cash': 'Orange Cash',
+                'etisalat_cash': 'Etisalat Cash',
+                'fawry': 'Fawry',
+                'bank_transfer': 'تحويل بنكي',
+                'cash': 'نقداً'
+            };
+            return methods[method] || method;
+        }
+
+        // Get payment method CSS class
+        function getPaymentMethodClass(method) {
+            const classes = {
+                'instapay': 'payment-instapay',
+                'vodafone_cash': 'payment-vodafone',
+                'orange_cash': 'payment-orange',
+                'etisalat_cash': 'payment-etisalat',
+                'fawry': 'payment-fawry',
+                'bank_transfer': 'payment-bank',
+                'cash': 'payment-cash'
+            };
+            return classes[method] || 'payment-badge';
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected, message = '') {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.innerHTML = `
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="mr-2 text-sm text-green-600">متصل</span>
+                `;
+            } else {
+                statusElement.innerHTML = `
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="mr-2 text-sm text-red-600">غير متصل ${message}</span>
+                `;
+            }
+        }
+
+        // Load budget data
+        async function loadBudget() {
+            try {
+                const { data, error } = await supabase
+                    .from('budget')
+                    .select('*')
+                    .single();
+
+                if (error) throw error;
+
+                document.getElementById('total-budget').textContent = formatCurrency(data.total_amount);
+                document.getElementById('used-budget').textContent = formatCurrency(data.used_amount);
+                document.getElementById('remaining-budget').textContent = formatCurrency(data.remaining_amount);
+            } catch (error) {
+                console.error('Error loading budget:', error);
+                document.getElementById('total-budget').textContent = 'خطأ في التحميل';
+                document.getElementById('used-budget').textContent = 'خطأ في التحميل';
+                document.getElementById('remaining-budget').textContent = 'خطأ في التحميل';
+            }
+        }
+
+        // Load employees data
+        async function loadEmployees() {
+            try {
+                const { data, error } = await supabase
+                    .from('employees')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                document.getElementById('total-employees').textContent = data.length;
+
+                const tableBody = document.getElementById('employees-table');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد بيانات موظفين</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = data.map(employee => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${employee.employee_id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="payment-badge ${getPaymentMethodClass(employee.wallet_type)}">
+                                    ${getPaymentMethodName(employee.wallet_type)}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(employee.total_allowance)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                document.getElementById('employees-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات الموظفين</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load allowances data
+        async function loadAllowances() {
+            try {
+                const { data, error } = await supabase
+                    .from('allowance_records')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const tableBody = document.getElementById('allowances-table');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500">لا توجد بدلات مسجلة</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = data.map(allowance => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(allowance.day)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${allowance.location || 'غير محدد'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(allowance.total_amount)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading allowances:', error);
+                document.getElementById('allowances-table').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات البدلات</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load transactions data
+        async function loadTransactions() {
+            try {
+                const { data, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+
+                if (error) throw error;
+
+                const tableBody = document.getElementById('transactions-table');
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد معاملات مسجلة</td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = data.map(transaction => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.type === 'budget_add' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${transaction.type === 'budget_add' ? '💰 إضافة ميزانية' : '📤 خصم بدل'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(transaction.amount)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${transaction.description || 'بدون وصف'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(transaction.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactions-table').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">خطأ في تحميل بيانات المعاملات</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load all data
+        async function loadAllData() {
+            try {
+                updateConnectionStatus(false, '- جاري التحميل...');
+                await Promise.all([
+                    loadBudget(),
+                    loadEmployees(),
+                    loadAllowances(),
+                    loadTransactions()
+                ]);
+                updateConnectionStatus(true);
+                document.getElementById('last-update').textContent = new Date().toLocaleString('ar-EG');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                updateConnectionStatus(false, '- خطأ في الاتصال');
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadAllData();
+        }
+
+        // Setup real-time subscriptions
+        function setupRealtime() {
+            // Subscribe to budget changes
+            supabase
+                .channel('budget-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'budget' }, () => {
+                    loadBudget();
+                })
+                .subscribe();
+
+            // Subscribe to employee changes
+            supabase
+                .channel('employee-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+                    loadEmployees();
+                })
+                .subscribe();
+
+            // Subscribe to allowance changes
+            supabase
+                .channel('allowance-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'allowance_records' }, () => {
+                    loadAllowances();
+                })
+                .subscribe();
+
+            // Subscribe to transaction changes
+            supabase
+                .channel('transaction-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+                    loadTransactions();
+                })
+                .subscribe();
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+            setupRealtime();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadAllData, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>
