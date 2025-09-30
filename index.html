@@ -829,7 +829,7 @@
         </section>
 
         <!-- Additional Statistics Row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8 secondary-stats-grid">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8 secondary-stats-grid">
             <!-- Total Allowances -->
             <div class="stat-card p-4">
                 <div class="text-center">
@@ -857,12 +857,23 @@
                 </div>
             </div>
 
-            <!-- Today -->
+            <!-- Total Unique Days This Month -->
             <div class="stat-card p-4">
                 <div class="text-center">
-                    <div class="text-2xl mb-2">⏰</div>
-                    <div class="text-2xl font-bold text-orange-600" id="today-allowances">0</div>
-                    <div class="text-sm text-gray-500">بدلات اليوم</div>
+                    <div class="text-2xl mb-2">📆</div>
+                    <div class="text-2xl font-bold text-emerald-600" id="unique-days-month">0</div>
+                    <div class="text-sm text-gray-500">عدد أيام العمل في الشهر</div>
+                </div>
+            </div>
+
+            <!-- Individual vs Group Visits -->
+            <div class="stat-card p-4">
+                <div class="text-center">
+                    <div class="text-2xl mb-2">👥</div>
+                    <div class="text-2xl font-bold text-amber-600">
+                        <span id="individual-visits">0</span>/<span id="group-visits">0</span>
+                    </div>
+                    <div class="text-sm text-gray-500">فردي/جماعي هذا الشهر</div>
                 </div>
             </div>
 
@@ -1270,6 +1281,34 @@
                 const thisMonth = new Date().toISOString().substring(0, 7);
                 const monthAllowances = data.filter(item => item.day && item.day.startsWith(thisMonth));
 
+                // Calculate unique days in this month
+                const uniqueDays = new Set(monthAllowances.map(item => item.day)).size;
+                document.getElementById('unique-days-month').textContent = uniqueDays;
+
+                // Calculate individual vs group visits
+                const dailyVisits = monthAllowances.reduce((acc, item) => {
+                    const day = item.day;
+                    if (!acc[day]) {
+                        acc[day] = new Set();
+                    }
+                    acc[day].add(item.employee_id);
+                    return acc;
+                }, {});
+
+                let individualVisits = 0;
+                let groupVisits = 0;
+
+                Object.values(dailyVisits).forEach(employees => {
+                    if (employees.size === 1) {
+                        individualVisits++;
+                    } else if (employees.size > 1) {
+                        groupVisits++;
+                    }
+                });
+
+                document.getElementById('individual-visits').textContent = individualVisits;
+                document.getElementById('group-visits').textContent = groupVisits;
+
                 // Today allowances
                 const today = new Date().toISOString().substring(0, 10);
                 const todayAllowances = data.filter(item => item.day === today);
@@ -1277,7 +1316,6 @@
                 document.getElementById('total-allowances').textContent = totalAllowances;
                 document.getElementById('avg-allowance').textContent = formatCurrency(avgAmount);
                 document.getElementById('month-allowances').textContent = monthAllowances.length;
-                document.getElementById('today-allowances').textContent = todayAllowances.length;
 
                 // Load recent allowances table
                 const tableBody = document.getElementById('allowances-table');
